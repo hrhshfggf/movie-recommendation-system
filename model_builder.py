@@ -90,8 +90,8 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 
 movie_dict_path  = os.path.join(MODELS_DIR, 'movie_dict.pkl')
 similarity_path  = os.path.join(MODELS_DIR, 'similarity.pkl')
-
-pickle.dump(similarity,       open(similarity_path,  'wb'))
+pickle.dump(new_df.to_dict(),  open(movie_dict_path,  'wb'))
+pickle.dump(similarity,        open(similarity_path,  'wb'))
 
 print(f"[✓] Saved  → {movie_dict_path}")
 print(f"[✓] Saved  → {similarity_path}")
