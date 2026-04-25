@@ -312,7 +312,8 @@ def _csv(name):
 MOVIES_CSV  = _csv('tmdb_5000_movies.csv')
 CREDITS_CSV = _csv('tmdb_5000_credits.csv')
 
-TMDB_KEY        = 'cdf3a58aa720377a583f33c3e879377c'
+TMDB_KEY        = os.environ.get('TMDB_API_KEY', 'cdf3a58aa720377a583f33c3e879377c')
+TMDB_BASE       = 'https://api.themoviedb.org/3'
 POSTER_BASE     = 'https://image.tmdb.org/t/p/w500'
 NO_POSTER       = 'https://via.placeholder.com/300x450/14142a/7c3aed?text=No+Image'
 
