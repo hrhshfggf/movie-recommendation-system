@@ -1,45 +1,48 @@
 import os
-import json
+import requests
+
+def download_from_gdrive(file_id, destination):
+    print(f"[…] Downloading {destination}...")
+    URL = "https://drive.google.com/uc?export=download"
+    session = requests.Session()
+    response = session.get(URL, params={"id": file_id}, stream=True)
+
+    # Handle Google's virus scan warning for large files
+    token = None
+    for key, value in response.cookies.items():
+        if key.startswith("download_warning"):
+            token = value
+            break
+
+    if token:
+        response = session.get(URL, params={"id": file_id, "confirm": token}, stream=True)
+
+    with open(destination, "wb") as f:
+        for chunk in response.iter_content(chunk_size=32768):
+            if chunk:
+                f.write(chunk)
+
+    print(f"[✓] Saved {destination}")
+
 
 def download_datasets():
-    files = ['tmdb_5000_movies.csv', 'tmdb_5000_credits.csv']
+    files = {
+        "tmdb_5000_movies.csv":  "1EZTGme9vrzeuB_HKU1eBLgInCXWb-dRx",
+        "tmdb_5000_credits.csv": "1JYAFQHX6IYQB83HwkVKtgZG6aeZCqIhF",
+    }
 
-    if all(os.path.exists(f) for f in files):
-        print("[✓] CSV files already present in root.")
+    all_present = all(os.path.exists(f) for f in files)
+    if all_present:
+        print("[✓] CSV files already present.")
         return
 
-    data_files = [os.path.join('data', f) for f in files]
-    if all(os.path.exists(f) for f in data_files):
-        print("[✓] CSV files already present in data/ folder.")
-        return
+    print("[…] CSV files not found. Downloading from Google Drive...")
+    for filename, file_id in files.items():
+        if not os.path.exists(filename):
+            download_from_gdrive(file_id, filename)
 
-    print("[…] CSV files not found. Downloading from Kaggle...")
+    print("[✓] All CSV files downloaded successfully!")
 
-    KAGGLE_USERNAME = os.environ.get('thanush09', '')
-    KAGGLE_KEY      = os.environ.get('KGAT_e4eaa125abac16ca81f8c9ee373d42f2', '')
-
-    if not KAGGLE_USERNAME or not KAGGLE_KEY:
-        raise EnvironmentError(
-            "KAGGLE_USERNAME and KAGGLE_KEY environment variables are not set.\n"
-            "Add them in Streamlit Cloud → Settings → Secrets."
-        )
-
-    kaggle_dir = os.path.expanduser('~/.kaggle')
-    os.makedirs(kaggle_dir, exist_ok=True)
-    kaggle_json = os.path.join(kaggle_dir, 'kaggle.json')
-    with open(kaggle_json, 'w') as f:
-        json.dump({"username": KAGGLE_USERNAME, "key": KAGGLE_KEY}, f)
-    os.chmod(kaggle_json, 0o600)
-
-    os.system('pip install kaggle -q')
-    result = os.system('kaggle datasets download -d tmdb/tmdb-movie-metadata --unzip')
-
-    if result != 0:
-        raise RuntimeError("Kaggle download failed. Check your KAGGLE_USERNAME and KAGGLE_KEY secrets.")
-
-    print("[✓] Download complete!")
 
 if __name__ == "__main__":
     download_datasets()
-    
-    
