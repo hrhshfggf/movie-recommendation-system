@@ -1,11 +1,11 @@
-import os, subprocess, streamlit as st
+import os, subprocess, sys, streamlit as st
 
 if not os.path.exists("models/similarity.pkl") or \
    not os.path.exists("models/movie_dict.pkl"):
     with st.spinner("⏳ Building model — first time only, ~60 seconds..."):
-        subprocess.run(["python", "model_builder.py"], check=True)
+        subprocess.run([sys.executable, "model_builder.py"], check=True)
     st.rerun()
-
+      
 import os, pickle, ast, requests
 import streamlit as st
 import pandas as pd
