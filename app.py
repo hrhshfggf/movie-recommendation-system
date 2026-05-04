@@ -749,39 +749,26 @@ with tab_analytics:
         </div>
         """, unsafe_allow_html=True)
 
-        import matplotlib.pyplot as plt
-        import matplotlib.patches as mpatches
-        import numpy as np
+        import plotly.express as px
+        
+        fig1 = px.bar(
+            top10_df.sort_values('Count', ascending=True), 
+            x='Count', y='Genre', orientation='h',
+            text='Count',
+            color_discrete_sequence=['#7c3aed']
+        )
+        fig1.update_traces(textposition='outside')
+        fig1.update_layout(
+            template="plotly_dark",
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=0, r=0, t=30, b=0),
+            xaxis_title="Number of Movies",
+            yaxis_title=""
+        )
+        st.plotly_chart(fig1, use_container_width=True)
 
-        plt.style.use('dark_background')
-        fig, ax = plt.subplots(figsize=(8, 4.5))
-        fig.patch.set_facecolor('#14142a')
-        ax.set_facecolor('#0f0f1c')
-
-        bars = ax.barh(top10_df['Genre'][::-1], top10_df['Count'][::-1],
-                       color=['#7c3aed','#6d28d9','#5b21b6','#4c1d95',
-                              '#2563eb','#1d4ed8','#1e40af','#06b6d4',
-                              '#0891b2','#0e7490'],
-                       height=0.65, edgecolor='none')
-
-        for bar in bars:
-            w = bar.get_width()
-            ax.text(w + 8, bar.get_y() + bar.get_height()/2,
-                    f'{int(w):,}', va='center', ha='left',
-                    fontsize=9, color='#a78bfa', fontweight='bold')
-
-        ax.set_xlabel('Number of Movies', color='#6b7194', fontsize=9)
-        ax.tick_params(colors='#9090b8', labelsize=9)
-        ax.spines[:].set_visible(False)
-        ax.xaxis.grid(True, color='#1e1e38', linewidth=0.8)
-        ax.set_axisbelow(True)
-        ax.set_xlim(0, top10_df['Count'].max() * 1.15)
-        fig.tight_layout(pad=1.5)
-
-        st.pyplot(fig, use_container_width=True)
-        plt.close(fig)
-
-        st.caption("📊 Drama leads with 2,297 films — hover the chart in the interactive version on the Analytics tab")
+        st.caption("📊 Drama leads with 2,297 films")
 
     with col_b:
         st.markdown("""
@@ -791,29 +778,25 @@ with tab_analytics:
         </div>
         """, unsafe_allow_html=True)
 
-        fig2, ax2 = plt.subplots(figsize=(5, 4.5))
-        fig2.patch.set_facecolor('#14142a')
-        ax2.set_facecolor('#0f0f1c')
-
-        n, bins, patches = ax2.hist(df_raw['vote_average'].dropna(), bins=20,
-                                     edgecolor='none', color='#7c3aed')
-        cmap = plt.cm.get_cmap('plasma')
-        for i, patch in enumerate(patches): # type: ignore
-            patch.set_facecolor(cmap(i / len(patches))) # type: ignore
-
-        ax2.axvline(df_raw['vote_average'].mean(), color='#f59e0b', linewidth=1.5,
-                    linestyle='--', label=f"Mean {df_raw['vote_average'].mean():.1f}")
-        ax2.legend(fontsize=8, facecolor='#14142a', edgecolor='#2a2a50', labelcolor='#a78bfa')
-        ax2.set_xlabel('IMDb Rating', color='#6b7194', fontsize=9)
-        ax2.set_ylabel('Movie Count', color='#6b7194', fontsize=9)
-        ax2.tick_params(colors='#9090b8', labelsize=9)
-        ax2.spines[:].set_visible(False)
-        ax2.yaxis.grid(True, color='#1e1e38', linewidth=0.8)
-        ax2.set_axisbelow(True)
-        fig2.tight_layout(pad=1.5)
-
-        st.pyplot(fig2, use_container_width=True)
-        plt.close(fig2)
+        fig2 = px.histogram(
+            df_raw.dropna(subset=['vote_average']), x='vote_average', nbins=20,
+            color_discrete_sequence=['#7c3aed']
+        )
+        mean_val = df_raw['vote_average'].mean()
+        fig2.add_vline(
+            x=mean_val, 
+            line_dash="dash", line_color="#f59e0b",
+            annotation_text=f"Mean: {mean_val:.1f}"
+        )
+        fig2.update_layout(
+            template="plotly_dark",
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=0, r=0, t=30, b=0),
+            xaxis_title="IMDb Rating",
+            yaxis_title="Movie Count"
+        )
+        st.plotly_chart(fig2, use_container_width=True)
 
     col_c, col_d = st.columns([3, 2])
 
@@ -830,37 +813,31 @@ with tab_analytics:
                    .agg(count=('title','count'), avg_rating=('vote_average','mean'))
                    .reset_index())
 
-        fig3, ax3 = plt.subplots(figsize=(8, 4))
-        ax3b = ax3.twinx()
-        fig3.patch.set_facecolor('#14142a')
-        ax3.set_facecolor('#0f0f1c')
-        ax3b.set_facecolor('#0f0f1c')
+        import plotly.graph_objects as go
+        from plotly.subplots import make_subplots
 
-        ax3.fill_between(year_df['year'], year_df['count'],
-                         alpha=0.35, color='#7c3aed')
-        ax3.plot(year_df['year'], year_df['count'],
-                 color='#a78bfa', linewidth=2)
-        ax3b.plot(year_df['year'], year_df['avg_rating'],
-                  color='#f59e0b', linewidth=1.8, linestyle='--', marker='o', markersize=3)
-
-        ax3.set_ylabel('# of Movies', color='#a78bfa', fontsize=8)
-        ax3b.set_ylabel('Avg Rating', color='#f59e0b', fontsize=8)
-        ax3.tick_params(colors='#9090b8', labelsize=8)
-        ax3b.tick_params(colors='#9090b8', labelsize=8)
-        ax3.spines[:].set_visible(False)
-        ax3b.spines[:].set_visible(False)
-        ax3.xaxis.grid(True, color='#1e1e38', linewidth=0.6)
-        ax3.yaxis.grid(True, color='#1e1e38', linewidth=0.6)
-        ax3.set_axisbelow(True)
-
-        # Legend
-        p1 = mpatches.Patch(color='#a78bfa', label='Movies Released')
-        p2 = mpatches.Patch(color='#f59e0b', label='Avg Rating')
-        ax3.legend(handles=[p1,p2], fontsize=8, facecolor='#14142a',
-                   edgecolor='#2a2a50', labelcolor='#e0e0f0', loc='upper left')
-        fig3.tight_layout(pad=1.5)
-        st.pyplot(fig3, use_container_width=True)
-        plt.close(fig3)
+        fig3 = make_subplots(specs=[[{"secondary_y": True}]])
+        fig3.add_trace(
+            go.Scatter(x=year_df['year'], y=year_df['count'], fill='tozeroy', 
+                       name='Movies Released', line=dict(color='#7c3aed')),
+            secondary_y=False
+        )
+        fig3.add_trace(
+            go.Scatter(x=year_df['year'], y=year_df['avg_rating'], 
+                       name='Avg Rating', line=dict(color='#f59e0b', dash='dash')),
+            secondary_y=True
+        )
+        fig3.update_layout(
+            template="plotly_dark",
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=0, r=0, t=30, b=0),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        fig3.update_yaxes(title_text="# of Movies", secondary_y=False)
+        fig3.update_yaxes(title_text="Avg Rating", secondary_y=True)
+        
+        st.plotly_chart(fig3, use_container_width=True)
 
     with col_d:
         st.markdown("""
@@ -870,31 +847,22 @@ with tab_analytics:
         </div>
         """, unsafe_allow_html=True)
 
-        fig4, ax4 = plt.subplots(figsize=(5, 4))
-        fig4.patch.set_facecolor('#14142a')
-        ax4.set_facecolor('#14142a')
-
         pie8 = genre_df.head(8)
-        colors_pie = ['#7c3aed','#2563eb','#06b6d4','#10b981',
-                      '#f59e0b','#ec4899','#6d28d9','#1d4ed8']
-        pie_results = ax4.pie( 
-            pie8['Count'], labels=pie8['Genre'].tolist(), autopct='%1.0f%%',
-            colors=colors_pie, startangle=90,
-            wedgeprops=dict(edgecolor='#07070f', linewidth=1.5),
-            pctdistance=0.78, labeldistance=1.1
+        fig4 = px.pie(
+            pie8, values='Count', names='Genre', hole=0.52,
+            color_discrete_sequence=['#7c3aed','#2563eb','#06b6d4','#10b981',
+                                     '#f59e0b','#ec4899','#6d28d9','#1d4ed8']
         )
-        wedges, texts, autotexts = pie_results # type: ignore
-        for t in texts:     t.set_color('#9090b8');  t.set_fontsize(8)
-        for t in autotexts: t.set_color('#fff');     t.set_fontsize(7.5); t.set_fontweight('bold')
-
-        centre = plt.Circle((0,0), 0.52, fc='#14142a')  # type: ignore
-        ax4.add_patch(centre)
-        ax4.text(0, 0, f'{pie8["Count"].sum():,}\nfilms',
-                 ha='center', va='center', fontsize=9, color='#a78bfa', fontweight='bold')
-
-        fig4.tight_layout()
-        st.pyplot(fig4, use_container_width=True)
-        plt.close(fig4)
+        fig4.update_traces(textposition='inside', textinfo='percent+label')
+        fig4.update_layout(
+            template="plotly_dark",
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=0, r=0, t=30, b=0),
+            showlegend=False,
+            annotations=[dict(text=f'{pie8["Count"].sum():,}<br>films', x=0.5, y=0.5, font_size=14, showarrow=False, font_color='#a78bfa')]
+        )
+        st.plotly_chart(fig4, use_container_width=True)
 
     st.markdown("""
     <div class="sec-head" style="margin-top:1rem">
@@ -919,24 +887,21 @@ with tab_analytics:
         scatter_df = df_raw[['runtime','vote_average','title']].dropna()
         scatter_df = scatter_df[(scatter_df['runtime'] > 40) & (scatter_df['runtime'] < 240)]
 
-        fig5, ax5 = plt.subplots(figsize=(5.5, 4))
-        fig5.patch.set_facecolor('#14142a')
-        ax5.set_facecolor('#0f0f1c')
-        sc = ax5.scatter(scatter_df['runtime'], scatter_df['vote_average'],
-                         c=scatter_df['vote_average'], cmap='plasma',
-                         alpha=0.5, s=12, linewidths=0)
-        ax5.set_xlabel('Runtime (min)', color='#6b7194', fontsize=9)
-        ax5.set_ylabel('Rating', color='#6b7194', fontsize=9)
-        ax5.tick_params(colors='#9090b8', labelsize=8)
-        ax5.spines[:].set_visible(False)
-        ax5.xaxis.grid(True, color='#1e1e38', linewidth=0.6)
-        ax5.yaxis.grid(True, color='#1e1e38', linewidth=0.6)
-        ax5.set_axisbelow(True)
-        cb = fig5.colorbar(sc, ax=ax5, shrink=0.8)
-        cb.ax.tick_params(colors='#9090b8', labelsize=7)
-        fig5.tight_layout(pad=1.5)
-        st.pyplot(fig5, use_container_width=True)
-        plt.close(fig5)
+        fig5 = px.scatter(
+            scatter_df, x='runtime', y='vote_average', color='vote_average',
+            hover_name='title', color_continuous_scale='plasma',
+            opacity=0.7
+        )
+        fig5.update_layout(
+            template="plotly_dark",
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=0, r=0, t=30, b=0),
+            xaxis_title="Runtime (min)",
+            yaxis_title="Rating",
+            coloraxis_showscale=True
+        )
+        st.plotly_chart(fig5, use_container_width=True)
 
     with col_f:
         st.markdown("""
@@ -948,29 +913,27 @@ with tab_analytics:
 
         bvr = df_raw[(df_raw['budget']>1e6)&(df_raw['revenue']>1e6)].copy()
 
-        fig6, ax6 = plt.subplots(figsize=(5.5, 4))
-        fig6.patch.set_facecolor('#14142a')
-        ax6.set_facecolor('#0f0f1c')
-        sc2 = ax6.scatter(bvr['budget'], bvr['revenue'],
-                          c=bvr['vote_average'], cmap='plasma',
-                          alpha=0.5, s=12, linewidths=0)
-        ax6.set_xscale('log'); ax6.set_yscale('log')
+        fig6 = px.scatter(
+            bvr, x='budget', y='revenue', color='vote_average',
+            hover_name='title', color_continuous_scale='plasma',
+            log_x=True, log_y=True, opacity=0.7
+        )
         mn = min(bvr['budget'].min(), bvr['revenue'].min())
         mx = max(bvr['budget'].max(), bvr['revenue'].max())
-        ax6.plot([mn,mx],[mn,mx], color='#f59e0b', linewidth=1, linestyle='--', alpha=0.5, label='Break-even')
-        ax6.legend(fontsize=7.5, facecolor='#14142a', edgecolor='#2a2a50', labelcolor='#e0e0f0')
-        ax6.set_xlabel('Budget ($)', color='#6b7194', fontsize=9)
-        ax6.set_ylabel('Revenue ($)', color='#6b7194', fontsize=9)
-        ax6.tick_params(colors='#9090b8', labelsize=8)
-        ax6.spines[:].set_visible(False)
-        ax6.xaxis.grid(True, color='#1e1e38', linewidth=0.6)
-        ax6.yaxis.grid(True, color='#1e1e38', linewidth=0.6)
-        ax6.set_axisbelow(True)
-        cb2 = fig6.colorbar(sc2, ax=ax6, shrink=0.8, label='Rating')
-        cb2.ax.tick_params(colors='#9090b8', labelsize=7)
-        fig6.tight_layout(pad=1.5)
-        st.pyplot(fig6, use_container_width=True)
-        plt.close(fig6)
+        
+        fig6.add_shape(
+            type="line", x0=mn, y0=mn, x1=mx, y1=mx,
+            line=dict(color="#f59e0b", dash="dash", width=1)
+        )
+        fig6.update_layout(
+            template="plotly_dark",
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=0, r=0, t=30, b=0),
+            xaxis_title="Budget ($)",
+            yaxis_title="Revenue ($)"
+        )
+        st.plotly_chart(fig6, use_container_width=True)
 
     st.markdown("""
     <div class="sec-head" style="margin-top:1rem">
