@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── Google OAuth ─────────────────────────────────────────────────────────────
 GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_REDIRECT_URI  = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:8501")
@@ -58,7 +57,6 @@ def exchange_code_for_user(code: str):
         return info   # keys: sub, email, name, picture
     except Exception:
         return None
-# ─────────────────────────────────────────────────────────────────────────────
 
 st.set_page_config(
     page_title="CineMatrix",
@@ -488,7 +486,6 @@ if not st.session_state.logged_in:
             # Unknown state — clear params and reload cleanly
             st.query_params.clear()
             st.rerun()
-    # ─────────────────────────────────────────────────────────────────────────
 
     st.markdown("""
     <div style="text-align:center; padding: 4rem 0;">
@@ -500,7 +497,6 @@ if not st.session_state.logged_in:
 
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        # ── Google Sign-In button ─────────────────────────────────────────────
         google_configured = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
         if google_configured:
             google_url = make_google_auth_url()
@@ -2104,7 +2100,6 @@ with tab_analytics:
 
 st.markdown("""
 <div class="site-footer">
-  <span>CineMatrix</span> &nbsp;·&nbsp; Powered by TMDB &nbsp;·&nbsp;
-  Built with Streamlit &amp; Python &nbsp;·&nbsp; © 2025
+  <span>CineMatrix</span> &nbsp;·&nbsp; Thank You For Visiting ;
 </div>
 """, unsafe_allow_html=True)
